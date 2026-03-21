@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { Save, X, Plus } from 'lucide-react';
 import { useTaskStore } from '../../store/taskStore';
 import { useAuthStore } from '../../store/authStore';
+import { useToast } from '../ui/Toast';
 import type { TaskCategory, TaskPriority, TaskStatus, AssignmentType } from '../../types';
 import {
   CATEGORY_LABELS, PRIORITY_LABELS, STATUS_LABELS, ASSIGNMENT_LABELS,
@@ -57,6 +58,7 @@ export default function TaskForm() {
 
   const { tasks, addTask, updateTask } = useTaskStore();
   const { currentUser } = useAuthStore();
+  const toast = useToast();
   const [tagInput, setTagInput] = useState('');
 
   const existing = id ? tasks.find((t) => t.id === id) : undefined;
@@ -111,8 +113,10 @@ export default function TaskForm() {
 
     if (isEdit && id) {
       updateTask(id, payload);
+      toast.success('Tarea actualizada', payload.title);
     } else {
       addTask(payload);
+      toast.success('Tarea creada', payload.title);
     }
     navigate('/tasks');
   };
