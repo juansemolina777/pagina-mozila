@@ -4,9 +4,11 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  /** Hashed with btoa (demo only – not for production) */
+  /** Hashed with btoa (demo only). Empty string = Google-only account. */
   passwordHash: string;
   avatar?: string;
+  /** 'google' if signed up via Google OAuth, undefined otherwise */
+  provider?: 'google' | 'email';
   createdAt: string;
 }
 

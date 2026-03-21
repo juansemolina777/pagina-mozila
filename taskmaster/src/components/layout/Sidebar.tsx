@@ -74,9 +74,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {/* User */}
         <div className="px-4 py-4 border-t border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-              {currentUser ? getInitials(currentUser.name) : '?'}
-            </div>
+            {currentUser?.avatar ? (
+              <img src={currentUser.avatar} alt={currentUser.name}
+                className="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-slate-700" />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                {currentUser ? getInitials(currentUser.name) : '?'}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-medium truncate">{currentUser?.name}</p>
               <p className="text-slate-400 text-xs truncate">{currentUser?.email}</p>
