@@ -15,7 +15,11 @@
       "Bash(taskkill /PID 14760 /F)",
       "Bash(curl -si http://localhost:5173/)",
       "Bash(curl -s http://localhost:5173/vite.config.ts)",
-      "Bash(npx kill-port:*)"
+      "Bash(npx kill-port:*)",
+      "mcp__ef8682d8-ec00-40c4-9768-c26d9ee07ebb__deploy_to_vercel",
+      "Bash(npx netlify:*)",
+      "Bash(npx vercel:*)",
+      "Bash(npx -y @netlify/mcp@latest --site-id b162c62e-e3af-4f60-a4b0-9617a01f962d --proxy-path \"https://netlify-mcp.netlify.app/proxy/eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..iOHcNV_6hxymc_7E.6qnVhZwoSGq6KVhNZEt84_q-W0JV_RYEw1IVtq9eH56H-wKITCg3QMgmBIONyzZPyRpK4QIr1YZUMSvolI8YKEZPyQgCls6uccGvCvH8qIgv2lGM9MuGBFAKuzxx0mLI3jJnjqkIsbDVBkG-BCBMML-et2DhrHwmQwZ-4T5QhJZfs6E2kDhO1i-0GWLi6k6fkDX5Ht64gvGC1Qvh5C07sKKW_TirErymOWqnW8hShFGr0sg6FJ4VsroL90UwemAJSNcPDIe-K4dwiUfwXWfyWPQe2ZyTuqTrLvdX_NR073SthQzeZzKZcfqqYgBJVgebCwdzH2LOJ6kir4lsQ4X8XjSyCC5aFtRc7YzFamYbMn7j5j6CGg.-E2sv5I2MPxeE-Bilw2Q6g\")"
     ]
   }
 }

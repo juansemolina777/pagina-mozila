@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Tag, Pencil, Clock, CheckCircle2, PlayCircle, XCircle, Flag } from 'lucide-react';
+import { Calendar, Tag, Pencil, Clock, CheckCircle2, PlayCircle, XCircle, Flag, Timer } from 'lucide-react';
 import type { Task, TaskStatus } from '../../types';
 import { useTaskStore } from '../../store/taskStore';
 import { useToast } from '../ui/Toast';
@@ -94,8 +94,17 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
             <p className="text-xs text-slate-400 mt-0.5">{ASSIGNMENT_LABELS[task.assignee.type]}</p>
           </div>
 
+          {task.estimatedHours != null && (
+            <div className="bg-slate-50 rounded-xl p-3">
+              <p className="text-xs text-slate-400 mb-1 font-medium">Horas estimadas</p>
+              <p className="text-sm font-semibold text-slate-800 flex items-center gap-1">
+                <Timer size={13} className="text-slate-400" /> {task.estimatedHours}h
+              </p>
+            </div>
+          )}
+
           {task.assignee.email && (
-            <div className="bg-slate-50 rounded-xl p-3 col-span-2">
+            <div className={cn('bg-slate-50 rounded-xl p-3', task.estimatedHours != null ? '' : 'col-span-2')}>
               <p className="text-xs text-slate-400 mb-1 font-medium">Email del asignado</p>
               <p className="text-sm font-medium text-indigo-600">{task.assignee.email}</p>
             </div>

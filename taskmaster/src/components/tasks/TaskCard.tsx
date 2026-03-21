@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Calendar, User, Tag, MoreVertical, Pencil, Trash2,
-  CheckCircle2, Clock, XCircle, PlayCircle, Expand,
+  CheckCircle2, Clock, XCircle, PlayCircle, Expand, AlertCircle,
 } from 'lucide-react';
 import type { Task, TaskStatus } from '../../types';
 import { useTaskStore } from '../../store/taskStore';
@@ -70,6 +70,11 @@ export default function TaskCard({ task }: TaskCardProps) {
               <span className={cn('text-xs px-2 py-0.5 rounded-full', CATEGORY_BG[task.category])}>
                 {CATEGORY_LABELS[task.category]}
               </span>
+              {overdue && (
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200 font-semibold animate-pulse">
+                  <AlertCircle size={11} /> Vencida
+                </span>
+              )}
             </div>
 
             <div className="relative flex-shrink-0">
@@ -132,9 +137,10 @@ export default function TaskCard({ task }: TaskCardProps) {
           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-2">
             {task.dueDate && (
               <span className={cn(
-                'flex items-center gap-1',
-                overdue && 'text-red-500 font-medium',
-                dueSoon && !overdue && 'text-amber-500 font-medium'
+                'flex items-center gap-1 font-medium',
+                overdue  ? 'text-red-500'   :
+                dueSoon  ? 'text-amber-500' :
+                           'text-green-600'
               )}>
                 <Calendar size={12} />
                 {getDueDateLabel(task.dueDate)}
@@ -144,6 +150,12 @@ export default function TaskCard({ task }: TaskCardProps) {
               <User size={12} />
               {task.assignee.type === 'self' ? 'Yo' : task.assignee.name}
             </span>
+            {task.estimatedHours != null && (
+              <span className="flex items-center gap-1">
+                <Clock size={12} />
+                {task.estimatedHours}h
+              </span>
+            )}
             <span className={cn('text-xs px-1.5 py-0.5 rounded font-medium border', PRIORITY_COLORS[task.priority])}>
               {PRIORITY_LABELS[task.priority]}
             </span>

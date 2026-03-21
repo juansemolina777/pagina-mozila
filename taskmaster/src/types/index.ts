@@ -49,6 +49,8 @@ export interface Task {
   /** ISO date string */
   dueDate: string | null;
   tags: string[];
+  /** Estimated hours to complete the task */
+  estimatedHours?: number;
   createdAt: string;
   updatedAt: string;
   /** ID of the user who owns the task */

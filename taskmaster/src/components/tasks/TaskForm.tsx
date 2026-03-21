@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Save, X, Plus } from 'lucide-react';
+import { Save, X, Plus, Clock } from 'lucide-react';
 import { useTaskStore } from '../../store/taskStore';
 import { useAuthStore } from '../../store/authStore';
 import { useToast } from '../ui/Toast';
@@ -15,16 +15,17 @@ import { toDateInputValue } from '../../utils/dateUtils';
 import { cn } from '../../utils/cn';
 
 const schema = z.object({
-  title:         z.string().min(1, 'El título es obligatorio').max(100),
-  description:   z.string().max(500),
-  status:        z.enum(['pending', 'in_progress', 'completed', 'cancelled']),
-  priority:      z.enum(['low', 'medium', 'high', 'urgent']),
-  category:      z.enum(['work', 'personal', 'shopping', 'health', 'education', 'finance', 'other']),
-  dueDate:       z.string(),
-  assigneeType:  z.enum(['self', 'team', 'other']),
-  assigneeName:  z.string(),
-  assigneeEmail: z.string(),
-  tags:          z.string(),
+  title:          z.string().min(1, 'El título es obligatorio').max(100),
+  description:    z.string().max(500),
+  status:         z.enum(['pending', 'in_progress', 'completed', 'cancelled']),
+  priority:       z.enum(['low', 'medium', 'high', 'urgent']),
+  category:       z.enum(['work', 'personal', 'shopping', 'health', 'education', 'finance', 'other']),
+  dueDate:        z.string(),
+  estimatedHours: z.string(),
+  assigneeType:   z.enum(['self', 'team', 'other']),
+  assigneeName:   z.string(),
+  assigneeEmail:  z.string(),
+  tags:           z.string(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -72,16 +73,17 @@ export default function TaskForm() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      title:         existing?.title ?? '',
-      description:   existing?.description ?? '',
-      status:        existing?.status ?? 'pending',
-      priority:      existing?.priority ?? 'medium',
-      category:      existing?.category ?? 'work',
-      dueDate:       toDateInputValue(existing?.dueDate ?? null),
-      assigneeType:  existing?.assignee.type ?? 'self',
-      assigneeName:  existing?.assignee.name ?? (currentUser?.name ?? ''),
-      assigneeEmail: existing?.assignee.email ?? '',
-      tags:          existing?.tags.join(', ') ?? '',
+      title:          existing?.title ?? '',
+      description:    existing?.description ?? '',
+      status:         existing?.status ?? 'pending',
+      priority:       existing?.priority ?? 'medium',
+      category:       existing?.category ?? 'work',
+      dueDate:        toDateInputValue(existing?.dueDate ?? null),
+      estimatedHours: existing?.estimatedHours != null ? String(existing.estimatedHours) : '',
+      assigneeType:   existing?.assignee.type ?? 'self',
+      assigneeName:   existing?.assignee.name ?? (currentUser?.name ?? ''),
+      assigneeEmail:  existing?.assignee.email ?? '',
+      tags:           existing?.tags.join(', ') ?? '',
     },
   });
 
@@ -95,13 +97,16 @@ export default function TaskForm() {
   const onSubmit = (data: FormData) => {
     if (!currentUser) return;
 
+    const parsedHours = data.estimatedHours ? parseFloat(data.estimatedHours) : undefined;
+
     const payload = {
-      title:       data.title,
-      description: data.description,
-      status:      data.status as TaskStatus,
-      priority:    data.priority as TaskPriority,
-      category:    data.category as TaskCategory,
-      dueDate:     data.dueDate || null,
+      title:          data.title,
+      description:    data.description,
+      status:         data.status as TaskStatus,
+      priority:       data.priority as TaskPriority,
+      category:       data.category as TaskCategory,
+      dueDate:        data.dueDate || null,
+      estimatedHours: parsedHours && !isNaN(parsedHours) ? parsedHours : undefined,
       assignee: {
         type:  data.assigneeType as AssignmentType,
         name:  data.assigneeType === 'self' ? currentUser.name : data.assigneeName,
@@ -193,6 +198,24 @@ export default function TaskForm() {
               <input type="date" {...register('dueDate')} className={inputCls} />
             </Field>
           </div>
+
+          {/* Estimated hours */}
+          <Field label="Horas estimadas (opcional)" error={errors.estimatedHours?.message}>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <Clock size={15} />
+              </span>
+              <input
+                type="number"
+                min="0.25"
+                max="999"
+                step="0.25"
+                {...register('estimatedHours')}
+                placeholder="ej. 2.5"
+                className={cn(inputCls, 'pl-9')}
+              />
+            </div>
+          </Field>
 
           {/* Assignment */}
           <div className="space-y-3">

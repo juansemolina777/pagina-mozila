@@ -1,8 +1,8 @@
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, LineChart, Line, ResponsiveContainer,
+  Tooltip, Legend, LineChart, Line, ResponsiveContainer, AreaChart, Area,
 } from 'recharts';
-import { ListChecks, CheckCircle2, AlertTriangle, Flame, TrendingUp, Clock } from 'lucide-react';
+import { ListChecks, CheckCircle2, AlertTriangle, Flame, TrendingUp, Clock, CalendarDays, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTaskStore } from '../../store/taskStore';
 import { useAuthStore } from '../../store/authStore';
@@ -13,7 +13,7 @@ import {
 } from '../../utils/taskMeta';
 import { isOverdue, isDueSoon, formatDate } from '../../utils/dateUtils';
 import { cn } from '../../utils/cn';
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
@@ -79,6 +79,17 @@ export default function DashboardPage() {
 
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
+  // ── Tasks due this week ───────────────────────────────────────────────────────
+  const now = new Date();
+  const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+  const weekEnd   = endOfWeek(now,   { weekStartsOn: 1 });
+  const dueThisWeek = tasks.filter((t) =>
+    t.dueDate &&
+    t.status !== 'completed' &&
+    t.status !== 'cancelled' &&
+    isWithinInterval(new Date(t.dueDate + 'T00:00:00'), { start: weekStart, end: weekEnd })
+  ).sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? ''));
+
   // ── Chart data ───────────────────────────────────────────────────────────────
 
   const statusData = getStatusStats(currentUser.id).filter((s) => s.count > 0).map((s) => ({
@@ -101,6 +112,18 @@ export default function DashboardPage() {
     ...d,
     date: format(new Date(d.date + 'T00:00:00'), 'd MMM', { locale: es }),
   }));
+
+  // ── 7-day completion rate chart ───────────────────────────────────────────────
+  const last7Days = getTimelineStats(currentUser.id, 7);
+  const completionRateData = last7Days.map((d) => {
+    const total7 = d.created > 0 || d.completed > 0 ? d.created + d.completed : 0;
+    return {
+      date: format(new Date(d.date + 'T00:00:00'), 'EEE', { locale: es }),
+      Completadas: d.completed,
+      Creadas: d.created,
+      Tasa: total7 > 0 ? Math.round((d.completed / (d.created + d.completed)) * 100) : 0,
+    };
+  });
 
   // Upcoming: not done, has due date, sorted by due date
   const upcoming = tasks
@@ -131,10 +154,20 @@ export default function DashboardPage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard label="Total tareas"    value={total}           icon={<ListChecks size={22} />}    color="indigo" />
-        <StatsCard label="Completadas"     value={completed}       icon={<CheckCircle2 size={22} />}  color="green" />
+        <StatsCard label="Total tareas"    value={total}               icon={<ListChecks size={22} />}    color="indigo" />
+        <StatsCard label="Completadas"     value={completed}           icon={<CheckCircle2 size={22} />}  color="green" />
         <StatsCard label="Vencidas"        value={overdueTasks.length} icon={<AlertTriangle size={22} />} color="red" />
-        <StatsCard label="% Completación"  value={`${completionRate}%`} icon={<Flame size={22} />}   color="purple" />
+        <StatsCard label="% Completación"  value={`${completionRate}%`} icon={<Flame size={22} />}       color="purple" />
+      </div>
+
+      {/* Secondary KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <StatsCard label="Esta semana"     value={dueThisWeek.length}  icon={<CalendarDays size={22} />}  color="blue" />
+        <StatsCard label="En progreso"     value={inProgress}          icon={<Clock size={22} />}         color="amber" />
+        <StatsCard label="Tasa 7 días"     value={(() => {
+          const last7 = last7Days.reduce((a, d) => ({ c: a.c + d.completed, t: a.t + d.created + d.completed }), { c: 0, t: 0 });
+          return last7.t > 0 ? `${Math.round((last7.c / last7.t) * 100)}%` : '—';
+        })()} icon={<Target size={22} />} color="green" />
       </div>
 
       {/* Overdue alert */}
@@ -175,6 +208,67 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Tasks due this week */}
+      {dueThisWeek.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 animate-fade-in">
+          <div className="flex items-center gap-2 mb-3">
+            <CalendarDays size={16} className="text-blue-500" />
+            <h3 className="text-sm font-semibold text-blue-700">Vencen esta semana ({dueThisWeek.length})</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+            {dueThisWeek.slice(0, 6).map((t) => {
+              const over = isOverdue(t.dueDate);
+              return (
+                <Link key={t.id} to={`/tasks/${t.id}/edit`}
+                  className="flex items-center gap-3 py-1.5 px-2 rounded-lg hover:bg-blue-100 transition-colors group">
+                  <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0',
+                    t.priority === 'urgent' ? 'bg-red-500' :
+                    t.priority === 'high'   ? 'bg-orange-400' :
+                    t.priority === 'medium' ? 'bg-blue-400' : 'bg-slate-300'
+                  )} />
+                  <span className="text-sm text-blue-700 font-medium truncate flex-1 group-hover:text-blue-900">{t.title}</span>
+                  <span className={cn('text-xs flex-shrink-0 font-semibold',
+                    over ? 'text-red-500' : 'text-blue-500'
+                  )}>
+                    {t.dueDate ? format(new Date(t.dueDate + 'T00:00:00'), 'EEE d', { locale: es }) : ''}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 7-day completion rate chart */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <div className="flex items-center gap-2 mb-1">
+          <Target size={16} className="text-green-500" />
+          <h3 className="text-sm font-semibold text-slate-900">Tasa de completación — últimos 7 días</h3>
+        </div>
+        <p className="text-xs text-slate-400 mb-4">Tareas completadas vs. creadas por día</p>
+        <ResponsiveContainer width="100%" height={200}>
+          <AreaChart data={completionRateData}>
+            <defs>
+              <linearGradient id="gradCompleted" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#22c55e" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#22c55e" stopOpacity={0.02} />
+              </linearGradient>
+              <linearGradient id="gradCreated" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#6366f1" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#6366f1" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+            <Tooltip content={<ChartTooltip />} />
+            <Legend wrapperStyle={{ fontSize: '12px' }} />
+            <Area type="monotone" dataKey="Creadas"    stroke="#6366f1" strokeWidth={2} fill="url(#gradCreated)" dot={{ r: 3 }} activeDot={{ r: 5 }} />
+            <Area type="monotone" dataKey="Completadas" stroke="#22c55e" strokeWidth={2} fill="url(#gradCompleted)" dot={{ r: 3 }} activeDot={{ r: 5 }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
 
       {/* Charts row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
