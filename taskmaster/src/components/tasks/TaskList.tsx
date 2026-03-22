@@ -7,6 +7,7 @@ import TaskCard from './TaskCard';
 import TaskFilters from './TaskFilters';
 import KanbanBoard from './KanbanBoard';
 import { cn } from '../../utils/cn';
+import AdBanner from '../ui/AdBanner';
 
 type ViewMode = 'list' | 'kanban';
 
@@ -65,6 +66,9 @@ export default function TaskList() {
           </Link>
         </div>
       </div>
+
+      {/* Ad banner */}
+      <AdBanner slot="1122334455" format="horizontal" className="rounded-xl overflow-hidden" />
 
       {/* Content */}
       {view === 'kanban' ? (

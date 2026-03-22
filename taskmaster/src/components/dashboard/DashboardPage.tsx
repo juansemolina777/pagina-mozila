@@ -15,6 +15,7 @@ import { isOverdue, isDueSoon, formatDate } from '../../utils/dateUtils';
 import { cn } from '../../utils/cn';
 import { format, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
+import AdBanner from '../ui/AdBanner';
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
 
@@ -169,6 +170,9 @@ export default function DashboardPage() {
           return last7.t > 0 ? `${Math.round((last7.c / last7.t) * 100)}%` : '—';
         })()} icon={<Target size={22} />} color="green" />
       </div>
+
+      {/* Ad banner — horizontal between KPIs and alerts */}
+      <AdBanner slot="1234567890" format="horizontal" className="rounded-xl overflow-hidden" />
 
       {/* Overdue alert */}
       {overdueTasks.length > 0 && (
@@ -400,6 +404,9 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Ad banner — bottom of dashboard */}
+      <AdBanner slot="0987654321" format="auto" className="rounded-xl overflow-hidden" />
     </div>
   );
 }
