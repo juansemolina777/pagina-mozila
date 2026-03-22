@@ -172,7 +172,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Ad banner — horizontal between KPIs and alerts */}
-      <AdBanner slot="1234567890" format="horizontal" className="rounded-xl overflow-hidden" />
+      <AdBanner slot="7703659062" format="horizontal" className="rounded-xl overflow-hidden" />
 
       {/* Overdue alert */}
       {overdueTasks.length > 0 && (
@@ -406,7 +406,7 @@ export default function DashboardPage() {
       )}
 
       {/* Ad banner — bottom of dashboard */}
-      <AdBanner slot="0987654321" format="auto" className="rounded-xl overflow-hidden" />
+      <AdBanner slot="6089659646" format="auto" className="rounded-xl overflow-hidden" />
     </div>
   );
 }

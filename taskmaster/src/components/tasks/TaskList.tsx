@@ -68,7 +68,7 @@ export default function TaskList() {
       </div>
 
       {/* Ad banner */}
-      <AdBanner slot="1122334455" format="horizontal" className="rounded-xl overflow-hidden" />
+      <AdBanner slot="7703659062" format="horizontal" className="rounded-xl overflow-hidden" />
 
       {/* Content */}
       {view === 'kanban' ? (
