@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, ClipboardList, LayoutGrid, List } from 'lucide-react';
+import { Plus, ClipboardList, LayoutGrid, List, Download } from 'lucide-react';
 import { useTaskStore } from '../../store/taskStore';
 import { useAuthStore } from '../../store/authStore';
 import TaskCard from './TaskCard';
@@ -8,6 +8,7 @@ import TaskFilters from './TaskFilters';
 import KanbanBoard from './KanbanBoard';
 import { cn } from '../../utils/cn';
 import AdBanner from '../ui/AdBanner';
+import { exportCompletedTasksToExcel } from '../../utils/exportToExcel';
 
 type ViewMode = 'list' | 'kanban';
 
@@ -18,8 +19,10 @@ export default function TaskList() {
 
   if (!currentUser) return null;
 
-  const filtered = getFilteredTasks(currentUser.id);
-  const total    = getTasksByUser(currentUser.id).length;
+  const allUserTasks = getTasksByUser(currentUser.id);
+  const filtered     = getFilteredTasks(currentUser.id);
+  const total        = allUserTasks.length;
+  const completedCount = allUserTasks.filter((t) => t.status === 'completed').length;
 
   return (
     <div className="space-y-4">
@@ -57,6 +60,15 @@ export default function TaskList() {
               <LayoutGrid size={15} />
             </button>
           </div>
+
+          <button
+            onClick={() => exportCompletedTasksToExcel(allUserTasks)}
+            disabled={completedCount === 0}
+            title={completedCount === 0 ? 'No hay tareas completadas' : `Exportar ${completedCount} tarea${completedCount !== 1 ? 's' : ''} completada${completedCount !== 1 ? 's' : ''}`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+          >
+            <Download size={15} /> Exportar Excel
+          </button>
 
           <Link
             to="/tasks/new"
