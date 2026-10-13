@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ImportX · Admin precios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8f5; --surface: #ffffff; --ink: #1c1a17; --muted: #6f6a62; --line: #e7e2da;
+    --accent: #8a6a3b; --accent-ink: #fff; --ml: #ffe600; --ml-ink: #2d3277;
+    --good: #1f7a4d; --bad: #b23a3a; --shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 20px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #131211; --surface: #1c1b19; --ink: #f1ede6; --muted: #a39d93; --line: #2e2c29;
+      --accent: #c9a46a; --accent-ink: #131211; --good: #4fc28a; --bad: #e87878; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #131211; --surface: #1c1b19; --ink: #f1ede6; --muted: #a39d93; --line: #2e2c29;
+    --accent: #c9a46a; --accent-ink: #131211; --good: #4fc28a; --bad: #e87878; --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 Inter, system-ui, sans-serif; }
+  header { padding: 40px 16px 24px; text-align: center; border-bottom: 1px solid var(--line); }
+  header h1 { font: 600 clamp(32px, 6vw, 52px)/1 "Cormorant Garamond", serif; margin: 0 0 8px; letter-spacing: .5px; }
+  header p { margin: 0; color: var(--muted); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+
+  .controls { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); padding: 12px 0; }
+  .controls .wrap { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  input, select, button { font: inherit; color: var(--ink); }
+  .controls input[type=search], .controls select, .controls input[type=number] {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; min-width: 0;
+  }
+  .controls input[type=search] { flex: 1 1 260px; }
+  .controls select { flex: 0 1 190px; }
+  .dolar { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+  .dolar input { width: 92px; }
+  .chips { display: flex; gap: 6px; }
+  .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 13px; cursor: pointer; font-size: 13px; }
+  .chip[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .count { color: var(--muted); font-size: 13px; margin: 16px 0 8px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; padding-bottom: 24px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow); }
+  .card .img { aspect-ratio: 1; background: #fff; display: block; }
+  .card img { width: 100%; height: 100%; object-fit: contain; padding: 12px; }
+  .card .body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .brand { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .name { font-weight: 500; font-size: 14px; margin: 0; min-height: 2.9em; }
+  .tag { font-size: 11px; color: var(--muted); }
+  .prices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .prices .lbl { font-size: 11px; color: var(--muted); display: block; }
+  .prices .val { font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; }
+  .prices .sub { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ml-val input { width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; background: var(--bg); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .diff { font-size: 12px; font-weight: 600; }
+  .diff.up { color: var(--good); } .diff.down { color: var(--bad); }
+  .actions { display: flex; gap: 6px; }
+  .btn { flex: 1; text-align: center; text-decoration: none; border-radius: 8px; padding: 8px 6px; font-size: 13px; font-weight: 500; border: 1px solid var(--line); color: var(--ink); background: var(--surface); }
+  .btn.ml { background: var(--ml); color: var(--ml-ink); border-color: var(--ml); }
+  .more { display: block; margin: 8px auto 48px; padding: 11px 22px; border-radius: 8px; border: 1px solid var(--ink); background: transparent; cursor: pointer; }
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 16px 40px; border-top: 1px solid var(--line); }
+  @media (max-width: 520px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .name { font-size: 13px; } .prices { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>ImportX · Admin</h1>
+  <p>Uso interno: costo en Star Company vs. precio en Mercado Libre Argentina. No publicar esta carpeta.</p>
+</header>
+
+<div class="controls">
+  <div class="wrap">
+    <input type="search" id="q" placeholder="Buscar perfume o marca…" aria-label="Buscar">
+    <select id="brand" aria-label="Marca"><option value="">Todas las marcas</option></select>
+    <select id="sort" aria-label="Ordenar">
+      <option value="pos">Orden original</option>
+      <option value="pasc">Precio U$: menor a mayor</option>
+      <option value="pdesc">Precio U$: mayor a menor</option>
+      <option value="gain">Mayor diferencia con ML</option>
+      <option value="name">Nombre A–Z</option>
+    </select>
+    <div class="chips" role="group" aria-label="Género">
+      <button class="chip" data-g="" aria-pressed="true">Todos</button>
+      <button class="chip" data-g="F" aria-pressed="false">Mujer</button>
+      <button class="chip" data-g="M" aria-pressed="false">Hombre</button>
+      <button class="chip" data-g="U" aria-pressed="false">Unisex</button>
+    </div>
+    <label class="dolar">Dólar ARS <input type="number" id="dolar" min="1" step="1"></label>
+    <button class="chip" id="export" title="Descarga ml-prices.js con todos los precios anotados">Exportar precios ML</button>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="count" id="count"></div>
+  <div class="grid" id="grid"></div>
+  <button class="more" id="more">Ver más</button>
+</main>
+
+<footer>
+  Precios de Star Company en dólares (U$). Los precios de Mercado Libre son orientativos; tocá el precio para corregirlo (se guarda en este navegador).
+</footer>
+
+<script src="data/perfumes.js"></script>
+<script src="data/ml-prices.js"></script>
+<script>
+(function () {
+  const PAGE = 60;
+  const all = window.PERFUMES;
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+  const userML = store.get("mlUser", {});
+  const state = { q: "", brand: "", g: "", sort: "pos", shown: PAGE, dolar: store.get("dolar", 1450) };
+
+  const $ = (id) => document.getElementById(id);
+  const usd = new Intl.NumberFormat("es-AR", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+  const ars = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+  const norm = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const genderLabel = { F: "Mujer", M: "Hombre", U: "Unisex" };
+
+  all.forEach((p) => { p._s = norm(p.n + " " + p.b); });
+
+  const brands = [...new Set(all.map((p) => p.b).filter(Boolean))].sort();
+  $("brand").insertAdjacentHTML("beforeend", brands.map((b) => `<option>${esc(b)}</option>`).join(""));
+  $("dolar").value = state.dolar;
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+  function mlPrice(p) {
+    if (userML[p.id] != null) return { ars: userML[p.id], user: true };
+    const m = window.ML_PRICES[p.id];
+    return m ? { ars: m.ars, url: m.url } : null;
+  }
+  function mlSearch(p) {
+    return "https://listado.mercadolibre.com.ar/" + encodeURIComponent(norm(p.q).replace(/[^a-z0-9 ]/g, " ").trim().replace(/\s+/g, "-"));
+  }
+  function gain(p) {
+    const m = mlPrice(p);
+    return m ? m.ars / state.dolar - p.p : -Infinity;
+  }
+
+  function filtered() {
+    const q = norm(state.q).split(/\s+/).filter(Boolean);
+    let list = all.filter((p) =>
+      (!state.brand || p.b === state.brand) &&
+      (!state.g || p.g === state.g) &&
+      q.every((w) => p._s.includes(w)));
+    const s = state.sort;
+    if (s === "pasc") list.sort((a, b) => a.p - b.p);
+    else if (s === "pdesc") list.sort((a, b) => b.p - a.p);
+    else if (s === "name") list.sort((a, b) => a.q.localeCompare(b.q));
+    else if (s === "gain") list.sort((a, b) => gain(b) - gain(a));
+    return list;
+  }
+
+  function diffHtml(p) {
+    const m = mlPrice(p);
+    if (!m || !state.dolar) return "";
+    const pct = ((m.ars / state.dolar) / p.p - 1) * 100;
+    return `<span class="diff ${pct >= 0 ? "up" : "down"}">${pct >= 0 ? "+" : ""}${pct.toFixed(0)}% vs costo</span>`;
+  }
+
+  function card(p) {
+    const m = mlPrice(p);
+    return `<article class="card" data-id="${p.id}">
+      <a class="img" href="${esc(p.u)}" target="_blank" rel="noopener"><img src="${esc(p.img)}" alt="${esc(p.q)}" loading="lazy"></a>
+      <div class="body">
+        <div class="brand">${esc(p.b)}</div>
+        <h2 class="name">${esc(p.q)}</h2>
+        <div class="tag">${genderLabel[p.g]}</div>
+        <div class="prices">
+          <div><span class="lbl">Star Company</span><span class="val">${usd.format(p.p)}</span>
+            <span class="sub">≈ ${ars.format(p.p * state.dolar)}</span></div>
+          <div class="ml-val"><span class="lbl">Mercado Libre</span>
+            <input type="text" inputmode="numeric" placeholder="ARS —" value="${m ? ars.format(m.ars) : ""}" aria-label="Precio en Mercado Libre">
+            <span class="diff-slot">${diffHtml(p)}</span></div>
+        </div>
+        <div class="actions">
+          <a class="btn ml" href="${m && m.url ? esc(m.url) : mlSearch(p)}" target="_blank" rel="noopener">Ver en ML</a>
+          <a class="btn" href="${esc(p.u)}" target="_blank" rel="noopener">Star Company</a>
+        </div>
+      </div>
+    </article>`;
+  }
+
+  let current = [];
+  function render(reset) {
+    if (reset) { current = filtered(); state.shown = PAGE; }
+    $("count").textContent = `${current.length.toLocaleString("es-AR")} perfumes`;
+    $("grid").innerHTML = current.slice(0, state.shown).map(card).join("");
+    $("more").hidden = state.shown >= current.length;
+  }
+
+  let t;
+  $("q").addEventListener("input", (e) => { clearTimeout(t); t = setTimeout(() => { state.q = e.target.value; render(true); }, 150); });
+  $("brand").addEventListener("change", (e) => { state.brand = e.target.value; render(true); });
+  $("sort").addEventListener("change", (e) => { state.sort = e.target.value; render(true); });
+  $("dolar").addEventListener("change", (e) => { state.dolar = Number(e.target.value) || 1; store.set("dolar", state.dolar); render(false); });
+  document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => {
+    document.querySelectorAll(".chip").forEach((x) => x.setAttribute("aria-pressed", x === c));
+    state.g = c.dataset.g; render(true);
+  }));
+  $("more").addEventListener("click", () => { state.shown += PAGE; render(false); });
+  $("export").addEventListener("click", () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const merged = { ...window.ML_PRICES };
+    for (const [id, v] of Object.entries(userML)) merged[id] = { ...(merged[id] || {}), ars: v, fecha: today };
+    const js = "// Precios de Mercado Libre Argentina, indexados por id de perfume (ver data/perfumes.js).\n" +
+      "// Formato: { \"<id>\": { \"ars\": 123456, \"url\": \"https://...\", \"fecha\": \"2026-10-13\" } }\n" +
+      "window.ML_PRICES = " + JSON.stringify(merged) + ";\n";
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([js], { type: "text/javascript" }));
+    a.download = "ml-prices.js";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  $("grid").addEventListener("change", (e) => {
+    if (!e.target.matches(".ml-val input")) return;
+    const cardEl = e.target.closest(".card");
+    const p = all[Number(cardEl.dataset.id)];
+    const v = Number(e.target.value.replace(/[^\d]/g, ""));
+    if (v) userML[p.id] = v; else delete userML[p.id];
+    store.set("mlUser", userML);
+    const m = mlPrice(p);
+    e.target.value = m ? ars.format(m.ars) : "";
+    cardEl.querySelector(".diff-slot").innerHTML = diffHtml(p);
+  });
+
+  render(true);
+})();
+</script>
+</body>
+</html>

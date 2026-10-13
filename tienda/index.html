@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ImportX · Perfumes importados</title>
+<meta name="description" content="ImportX: perfumes importados originales. Más de 2000 fragancias para mujer, hombre y unisex. Pedidos por WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8f5; --surface: #ffffff; --ink: #17151a; --muted: #6e6a72; --line: #e8e3dc;
+    --accent: #9a7440; --accent-soft: #f3ebdf; --wa: #1fa855; --wa-ink: #fff;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121113; --surface: #1b1a1d; --ink: #f2eee8; --muted: #a29da6; --line: #2d2b30;
+      --accent: #d1ab70; --accent-soft: #2a241b; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121113; --surface: #1b1a1d; --ink: #f2eee8; --muted: #a29da6; --line: #2d2b30;
+    --accent: #d1ab70; --accent-soft: #2a241b; --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 Inter, system-ui, sans-serif; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; max-width: 1280px; margin: 0 auto; }
+  .logo { font: 700 22px/1 Inter, sans-serif; letter-spacing: 4px; }
+  .logo span { color: var(--accent); }
+  .cart-btn { position: relative; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-weight: 500; }
+  .cart-btn b { background: var(--accent); color: var(--bg); border-radius: 999px; min-width: 20px; height: 20px; font-size: 12px; display: grid; place-items: center; padding: 0 6px; }
+
+  .hero { text-align: center; padding: 36px 16px 32px; border-bottom: 1px solid var(--line); }
+  .hero h1 { font: 600 clamp(34px, 6.5vw, 60px)/1.05 "Cormorant Garamond", serif; margin: 0 0 10px; }
+  .hero p { margin: 0 auto; color: var(--muted); max-width: 560px; }
+  .perks { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 22px; margin-top: 18px; font-size: 13px; color: var(--muted); }
+  .perks span::before { content: "✓ "; color: var(--accent); font-weight: 700; }
+
+  .controls { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); padding: 12px 0; }
+  .controls .wrap { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .controls input, .controls select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; min-width: 0; }
+  .controls input { flex: 1 1 260px; }
+  .controls select { flex: 0 1 200px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 13px; font-size: 13px; }
+  .chip[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .count { color: var(--muted); font-size: 13px; margin: 16px 0 8px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; padding-bottom: 24px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow); }
+  .card .img { aspect-ratio: 1; background: #fff; }
+  .card img { width: 100%; height: 100%; object-fit: contain; padding: 12px; display: block; }
+  .card .body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .brand { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .name { font-weight: 500; font-size: 14px; margin: 0; }
+  .tag { font-size: 12px; color: var(--muted); }
+  .price { margin-top: auto; padding-top: 10px; font: 700 20px/1.2 Inter, sans-serif; font-variant-numeric: tabular-nums; }
+  .price.ask { font-size: 14px; font-weight: 500; color: var(--muted); }
+  .actions { display: flex; gap: 6px; margin-top: 8px; }
+  .add { flex: 1; border: 1px solid var(--ink); background: var(--ink); color: var(--bg); border-radius: 8px; padding: 9px 8px; font-size: 13px; font-weight: 600; }
+  .add.in { background: var(--accent-soft); color: var(--ink); border-color: var(--accent); }
+  .wa { display: grid; place-items: center; width: 40px; border-radius: 8px; background: var(--wa); color: var(--wa-ink); text-decoration: none; }
+  .wa svg { width: 20px; height: 20px; }
+  .more { display: block; margin: 8px auto 48px; padding: 11px 22px; border-radius: 8px; border: 1px solid var(--ink); background: transparent; }
+
+  .drawer { position: fixed; inset: 0; z-index: 20; display: none; }
+  .drawer.open { display: block; }
+  .drawer .shade { position: absolute; inset: 0; background: rgba(0,0,0,.4); }
+  .drawer .panel { position: absolute; right: 0; top: 0; bottom: 0; width: min(420px, 100%); background: var(--bg); display: flex; flex-direction: column; }
+  .panel header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--line); }
+  .panel h2 { margin: 0; font: 600 26px "Cormorant Garamond", serif; }
+  .close { border: 0; background: none; font-size: 26px; line-height: 1; }
+  .lines { flex: 1; overflow: auto; padding: 8px 16px; }
+  .line { display: grid; grid-template-columns: 56px 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .line img { width: 56px; height: 56px; object-fit: contain; background: #fff; border-radius: 6px; }
+  .line .t { font-size: 13px; }
+  .line .t small { display: block; color: var(--muted); }
+  .qty { display: flex; align-items: center; gap: 6px; }
+  .qty button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); }
+  .empty { color: var(--muted); text-align: center; padding: 40px 0; }
+  .panel footer { padding: 16px; border-top: 1px solid var(--line); }
+  .total { display: flex; justify-content: space-between; font-weight: 700; font-size: 18px; margin-bottom: 4px; }
+  .note { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+  .send { width: 100%; border: 0; border-radius: 10px; background: var(--wa); color: var(--wa-ink); padding: 13px; font-weight: 600; display: flex; justify-content: center; gap: 8px; align-items: center; }
+  .send:disabled { opacity: .5; cursor: default; }
+
+  .site-footer { text-align: center; color: var(--muted); font-size: 13px; padding: 28px 16px 44px; border-top: 1px solid var(--line); }
+  .site-footer a { color: var(--accent); }
+  @media (max-width: 520px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .controls select { flex: 1 1 140px; }
+    .name { font-size: 13px; } .price { font-size: 17px; }
+    .add { font-size: 12px; padding: 8px 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">IMPORT<span>X</span></div>
+  <button class="cart-btn" id="openCart" aria-label="Ver pedido">Mi pedido <b id="cartCount">0</b></button>
+</div>
+
+<section class="hero">
+  <h1>Perfumes importados</h1>
+  <p>Fragancias originales de las mejores marcas, para mujer, hombre y unisex.</p>
+  <div class="perks"><span>Productos originales</span><span>Envíos a todo el país</span><span>Pedidos por WhatsApp</span></div>
+</section>
+
+<div class="controls">
+  <div class="wrap">
+    <input type="search" id="q" placeholder="Buscá tu perfume o marca…" aria-label="Buscar">
+    <select id="brand" aria-label="Marca"><option value="">Todas las marcas</option></select>
+    <select id="sort" aria-label="Ordenar">
+      <option value="pos">Destacados</option>
+      <option value="pasc">Precio: menor a mayor</option>
+      <option value="pdesc">Precio: mayor a menor</option>
+      <option value="name">Nombre A–Z</option>
+    </select>
+    <div class="chips" role="group" aria-label="Género">
+      <button class="chip" data-g="" aria-pressed="true">Todos</button>
+      <button class="chip" data-g="F" aria-pressed="false">Mujer</button>
+      <button class="chip" data-g="M" aria-pressed="false">Hombre</button>
+      <button class="chip" data-g="U" aria-pressed="false">Unisex</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="count" id="count"></div>
+  <div class="grid" id="grid"></div>
+  <button class="more" id="more">Ver más perfumes</button>
+</main>
+
+<footer class="site-footer">
+  <strong>ImportX</strong> · Perfumes importados<br>
+  ¿Dudas? <a id="footerWa" href="#" target="_blank" rel="noopener">Escribinos por WhatsApp</a>
+</footer>
+
+<div class="drawer" id="drawer" aria-hidden="true">
+  <div class="shade" data-close></div>
+  <aside class="panel" role="dialog" aria-label="Tu pedido">
+    <header><h2>Tu pedido</h2><button class="close" data-close aria-label="Cerrar">×</button></header>
+    <div class="lines" id="lines"></div>
+    <footer>
+      <div class="total"><span>Total</span><span id="total"></span></div>
+      <p class="note" id="totalNote"></p>
+      <button class="send" id="send">Enviar pedido por WhatsApp</button>
+    </footer>
+  </aside>
+</div>
+
+<script src="catalogo.js"></script>
+<script>
+// ── Configuración ─────────────────────────────────────────────
+// Número de WhatsApp de ImportX con código de país, sin "+" ni espacios (ej. Argentina: 5491112345678).
+const WHATSAPP = "";
+// ──────────────────────────────────────────────────────────────
+
+(function () {
+  const PAGE = 60;
+  const all = window.CATALOGO;
+  const byId = new Map(all.map((p) => [p.id, p]));
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+  const cart = store.get("importxCart", {});
+  const state = { q: "", brand: "", g: "", sort: "pos", shown: PAGE };
+
+  const $ = (id) => document.getElementById(id);
+  const ars = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+  const norm = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const genderLabel = { F: "Mujer", M: "Hombre", U: "Unisex" };
+  const waIcon = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.5-.3Z"/></svg>';
+
+  all.forEach((p) => { p._s = norm(p.n + " " + p.b); });
+  const brands = [...new Set(all.map((p) => p.b).filter(Boolean))].sort();
+  $("brand").insertAdjacentHTML("beforeend", brands.map((b) => `<option>${esc(b)}</option>`).join(""));
+
+  function waLink(text) {
+    return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`;
+  }
+  $("footerWa").href = waLink("¡Hola ImportX! Tengo una consulta.");
+
+  function filtered() {
+    const q = norm(state.q).split(/\s+/).filter(Boolean);
+    const list = all.filter((p) =>
+      (!state.brand || p.b === state.brand) &&
+      (!state.g || p.g === state.g) &&
+      q.every((w) => p._s.includes(w)));
+    // Sin precio cargado van al final al ordenar por precio.
+    const price = (p, dir) => (p.ars == null ? Infinity : dir * p.ars);
+    if (state.sort === "pasc") list.sort((a, b) => price(a, 1) - price(b, 1));
+    else if (state.sort === "pdesc") list.sort((a, b) => price(a, -1) - price(b, -1));
+    else if (state.sort === "name") list.sort((a, b) => a.n.localeCompare(b.n));
+    return list;
+  }
+
+  function card(p) {
+    const inCart = cart[p.id];
+    const ask = `¡Hola ImportX! Quiero consultar por el perfume ${p.n}${p.ars ? ` (${ars.format(p.ars)})` : ""}.`;
+    return `<article class="card">
+      <div class="img">${p.img ? `<img src="${esc(p.img)}" alt="${esc(p.n)}" loading="lazy">` : ""}</div>
+      <div class="body">
+        <div class="brand">${esc(p.b)}</div>
+        <h2 class="name">${esc(p.n)}</h2>
+        <div class="tag">${genderLabel[p.g]}</div>
+        ${p.ars ? `<div class="price">${ars.format(p.ars)}</div>` : `<div class="price ask">Consultá el precio</div>`}
+        <div class="actions">
+          <button class="add${inCart ? " in" : ""}" data-add="${p.id}">${inCart ? `En el pedido (${inCart})` : "Agregar al pedido"}</button>
+          <a class="wa" href="${waLink(ask)}" target="_blank" rel="noopener" aria-label="Consultar por WhatsApp">${waIcon}</a>
+        </div>
+      </div>
+    </article>`;
+  }
+
+  let current = [];
+  function render(reset) {
+    if (reset) { current = filtered(); state.shown = PAGE; }
+    $("count").textContent = `${current.length.toLocaleString("es-AR")} perfumes`;
+    $("grid").innerHTML = current.slice(0, state.shown).map(card).join("");
+    $("more").hidden = state.shown >= current.length;
+  }
+
+  function renderCart() {
+    const ids = Object.keys(cart).map(Number).filter((id) => byId.has(id));
+    $("cartCount").textContent = ids.reduce((n, id) => n + cart[id], 0);
+    $("lines").innerHTML = ids.length ? ids.map((id) => {
+      const p = byId.get(id);
+      return `<div class="line">
+        ${p.img ? `<img src="${esc(p.img)}" alt="">` : "<span></span>"}
+        <div class="t">${esc(p.n)}<small>${p.ars ? ars.format(p.ars) : "Precio a consultar"}</small></div>
+        <div class="qty"><button data-dec="${id}" aria-label="Quitar uno">−</button>${cart[id]}<button data-inc="${id}" aria-label="Agregar uno">+</button></div>
+      </div>`;
+    }).join("") : `<p class="empty">Todavía no agregaste perfumes.</p>`;
+    const total = ids.reduce((s, id) => s + (byId.get(id).ars || 0) * cart[id], 0);
+    const pending = ids.some((id) => !byId.get(id).ars);
+    $("total").textContent = ars.format(total);
+    $("totalNote").textContent = pending ? "Algunos perfumes tienen precio a consultar; te lo confirmamos por WhatsApp." : "";
+    $("send").disabled = !ids.length;
+  }
+
+  function setQty(id, n) {
+    if (n > 0) cart[id] = n; else delete cart[id];
+    store.set("importxCart", cart);
+    renderCart(); render(false);
+  }
+
+  function orderText() {
+    const ids = Object.keys(cart).map(Number).filter((id) => byId.has(id));
+    let total = 0;
+    const lines = ids.map((id) => {
+      const p = byId.get(id), q = cart[id];
+      total += (p.ars || 0) * q;
+      return `• ${q} x ${p.n} — ${p.ars ? ars.format(p.ars * q) : "a consultar"}`;
+    });
+    return `¡Hola ImportX! Quiero hacer este pedido:\n\n${lines.join("\n")}\n\nTotal: ${ars.format(total)}`;
+  }
+
+  let t;
+  $("q").addEventListener("input", (e) => { clearTimeout(t); t = setTimeout(() => { state.q = e.target.value; render(true); }, 150); });
+  $("brand").addEventListener("change", (e) => { state.brand = e.target.value; render(true); });
+  $("sort").addEventListener("change", (e) => { state.sort = e.target.value; render(true); });
+  document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => {
+    document.querySelectorAll(".chip").forEach((x) => x.setAttribute("aria-pressed", x === c));
+    state.g = c.dataset.g; render(true);
+  }));
+  $("more").addEventListener("click", () => { state.shown += PAGE; render(false); });
+  $("grid").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-add]");
+    if (b) { const id = Number(b.dataset.add); setQty(id, (cart[id] || 0) + 1); }
+  });
+  $("lines").addEventListener("click", (e) => {
+    const inc = e.target.closest("[data-inc]"), dec = e.target.closest("[data-dec]");
+    if (inc) setQty(Number(inc.dataset.inc), cart[inc.dataset.inc] + 1);
+    if (dec) setQty(Number(dec.dataset.dec), cart[dec.dataset.dec] - 1);
+  });
+  const drawer = $("drawer");
+  $("openCart").addEventListener("click", () => { drawer.classList.add("open"); drawer.setAttribute("aria-hidden", "false"); });
+  drawer.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) { drawer.classList.remove("open"); drawer.setAttribute("aria-hidden", "true"); } });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") drawer.classList.remove("open"); });
+  $("send").addEventListener("click", () => window.open(waLink(orderText()), "_blank", "noopener"));
+
+  render(true);
+  renderCart();
+})();
+</script>
+</body>
+</html>
