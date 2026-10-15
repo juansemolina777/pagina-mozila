@@ -59,7 +59,7 @@
   .ml-val input { width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; background: var(--bg); font-size: 14px; font-variant-numeric: tabular-nums; }
   .diff { font-size: 12px; font-weight: 600; }
   .diff.up { color: var(--good); } .diff.down { color: var(--bad); }
-  .actions { display: flex; gap: 6px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 6px; }
   .btn { flex: 1; text-align: center; text-decoration: none; border-radius: 8px; padding: 8px 6px; font-size: 13px; font-weight: 500; border: 1px solid var(--line); color: var(--ink); background: var(--surface); }
   .btn.ml { background: var(--ml); color: var(--ml-ink); border-color: var(--ml); }
   .more { display: block; margin: 8px auto 48px; padding: 11px 22px; border-radius: 8px; border: 1px solid var(--ink); background: transparent; cursor: pointer; }
@@ -75,7 +75,7 @@
   .card.is-hidden { opacity: .45; }
   .card.is-hidden:hover { opacity: .8; }
   .badge-hidden { align-self: flex-start; font-size: 11px; font-weight: 600; color: var(--bad); border: 1px solid var(--bad); border-radius: 999px; padding: 1px 8px; }
-  .btn.hide { flex: 0 0 auto; padding: 8px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  .btn.hide { flex: 1 1 100%; padding: 7px 10px; cursor: pointer; font: inherit; font-size: 13px; }
   .btn.hide.on { border-color: var(--bad); color: var(--bad); }
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 16px 40px; border-top: 1px solid var(--line); }
   @media (max-width: 520px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .name { font-size: 13px; } .prices { grid-template-columns: 1fr; } }
