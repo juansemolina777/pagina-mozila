@@ -224,6 +224,7 @@
 </div>
 
 <script src="catalogo.js"></script>
+<script src="ocultos.js"></script>
 <script>
 // ── Configuración ─────────────────────────────────────────────
 // Número de WhatsApp de ImportX con código de país, sin "+" ni espacios (ej. Argentina: 5491112345678).
@@ -232,7 +233,10 @@ const WHATSAPP = "5493471607271";
 
 (function () {
   const PAGE = 60;
-  const all = window.CATALOGO;
+  // Los perfumes y marcas ocultos desde el admin no se muestran.
+  const ocultos = window.OCULTOS || { perfumes: [], marcas: [] };
+  const hiddenIds = new Set(ocultos.perfumes), hiddenBrands = new Set(ocultos.marcas);
+  const all = window.CATALOGO.filter((p) => !hiddenIds.has(p.id) && !hiddenBrands.has(p.b));
   const byId = new Map(all.map((p) => [p.id, p]));
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },

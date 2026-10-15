@@ -63,6 +63,20 @@
   .btn { flex: 1; text-align: center; text-decoration: none; border-radius: 8px; padding: 8px 6px; font-size: 13px; font-weight: 500; border: 1px solid var(--line); color: var(--ink); background: var(--surface); }
   .btn.ml { background: var(--ml); color: var(--ml-ink); border-color: var(--ml); }
   .more { display: block; margin: 8px auto 48px; padding: 11px 22px; border-radius: 8px; border: 1px solid var(--ink); background: transparent; cursor: pointer; }
+  .vis { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; margin-top: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+  .vis strong { font-size: 14px; margin-right: 4px; }
+  .vis select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
+  .vis .summary { color: var(--muted); font-size: 13px; margin-left: auto; }
+  .vis .hb { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+  .vis .hb:empty { display: none; }
+  .hb-chip { border: 1px solid var(--bad); color: var(--bad); background: none; border-radius: 999px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+  .chip.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  .chip:disabled { opacity: .45; cursor: default; }
+  .card.is-hidden { opacity: .45; }
+  .card.is-hidden:hover { opacity: .8; }
+  .badge-hidden { align-self: flex-start; font-size: 11px; font-weight: 600; color: var(--bad); border: 1px solid var(--bad); border-radius: 999px; padding: 1px 8px; }
+  .btn.hide { flex: 0 0 auto; padding: 8px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  .btn.hide.on { border-color: var(--bad); color: var(--bad); }
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 16px 40px; border-top: 1px solid var(--line); }
   @media (max-width: 520px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .name { font-size: 13px; } .prices { grid-template-columns: 1fr; } }
 </style>
@@ -96,6 +110,18 @@
 </div>
 
 <main class="wrap">
+  <section class="vis" aria-label="Visibilidad en la tienda">
+    <strong>Visibilidad en la tienda</strong>
+    <select id="vis" aria-label="Filtrar por visibilidad">
+      <option value="">Ver todos</option>
+      <option value="visible">Solo visibles</option>
+      <option value="hidden">Solo ocultos</option>
+    </select>
+    <button class="chip" id="toggleBrand" disabled>Elegí una marca para ocultarla</button>
+    <span class="summary" id="hiddenSummary"></span>
+    <button class="chip primary" id="exportOcultos" title="Descarga ocultos.js para reemplazar tienda/ocultos.js">Exportar ocultos.js</button>
+    <div class="hb" id="hiddenBrands"></div>
+  </section>
   <div class="count" id="count"></div>
   <div class="grid" id="grid"></div>
   <button class="more" id="more">Ver más</button>
@@ -107,6 +133,7 @@
 
 <script src="data/perfumes.js"></script>
 <script src="data/ml-prices.js"></script>
+<script src="../tienda/ocultos.js"></script>
 <script>
 (function () {
   const PAGE = 60;
@@ -116,7 +143,16 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
   };
   const userML = store.get("mlUser", {});
-  const state = { q: "", brand: "", g: "", sort: "pos", shown: PAGE, dolar: store.get("dolar", 1450) };
+  const state = { q: "", brand: "", g: "", sort: "pos", vis: "", shown: PAGE, dolar: store.get("dolar", 1450) };
+
+  // Ocultos: arranca de tienda/ocultos.js; los cambios quedan en este navegador hasta exportarlos.
+  const base = window.OCULTOS || { perfumes: [], marcas: [] };
+  const saved = store.get("ocultos", null);
+  const hidden = { perfumes: new Set((saved || base).perfumes), marcas: new Set((saved || base).marcas) };
+  function saveHidden() {
+    store.set("ocultos", { perfumes: [...hidden.perfumes], marcas: [...hidden.marcas] });
+  }
+  const isHidden = (p) => hidden.perfumes.has(p.id) || hidden.marcas.has(p.b);
 
   const $ = (id) => document.getElementById(id);
   const usd = new Intl.NumberFormat("es-AR", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
@@ -147,6 +183,7 @@
   function filtered() {
     const q = norm(state.q).split(/\s+/).filter(Boolean);
     let list = all.filter((p) =>
+      (!state.vis || (state.vis === "hidden") === isHidden(p)) &&
       (!state.brand || p.b === state.brand) &&
       (!state.g || p.g === state.g) &&
       q.every((w) => p._s.includes(w)));
@@ -167,9 +204,11 @@
 
   function card(p) {
     const m = mlPrice(p);
-    return `<article class="card" data-id="${p.id}">
+    const off = isHidden(p), byBrand = hidden.marcas.has(p.b);
+    return `<article class="card${off ? " is-hidden" : ""}" data-id="${p.id}">
       <a class="img" href="${esc(p.u)}" target="_blank" rel="noopener"><img src="${esc(p.img)}" alt="${esc(p.q)}" loading="lazy"></a>
       <div class="body">
+        ${off ? `<span class="badge-hidden">${byBrand ? "Oculto (marca)" : "Oculto"}</span>` : ""}
         <div class="brand">${esc(p.b)}</div>
         <h2 class="name">${esc(p.q)}</h2>
         <div class="tag">${genderLabel[p.g]}</div>
@@ -183,14 +222,30 @@
         <div class="actions">
           <a class="btn ml" href="${m && m.url ? esc(m.url) : mlSearch(p)}" target="_blank" rel="noopener">Ver en ML</a>
           <a class="btn" href="${esc(p.u)}" target="_blank" rel="noopener">Star Company</a>
+          <button class="btn hide${hidden.perfumes.has(p.id) ? " on" : ""}" data-hide="${p.id}"
+            ${byBrand ? `disabled title="Está oculta toda la marca"` : ""}>${hidden.perfumes.has(p.id) ? "Mostrar" : "Ocultar"}</button>
         </div>
       </div>
     </article>`;
   }
 
+  function renderVis() {
+    const nHidden = all.filter(isHidden).length;
+    $("hiddenSummary").textContent = `${nHidden.toLocaleString("es-AR")} ocultos · ${(all.length - nHidden).toLocaleString("es-AR")} visibles en la tienda`;
+    const b = state.brand;
+    $("toggleBrand").disabled = !b;
+    $("toggleBrand").textContent = !b ? "Elegí una marca para ocultarla"
+      : hidden.marcas.has(b) ? `Mostrar marca ${b}` : `Ocultar marca ${b}`;
+    const hb = [...hidden.marcas].sort();
+    $("hiddenBrands").innerHTML = hb.length
+      ? `Marcas ocultas: ${hb.map((m) => `<button class="hb-chip" data-unhide-brand="${esc(m)}" title="Volver a mostrar">${esc(m)} ×</button>`).join("")}`
+      : "";
+  }
+
   let current = [];
   function render(reset) {
     if (reset) { current = filtered(); state.shown = PAGE; }
+    renderVis();
     $("count").textContent = `${current.length.toLocaleString("es-AR")} perfumes`;
     $("grid").innerHTML = current.slice(0, state.shown).map(card).join("");
     $("more").hidden = state.shown >= current.length;
@@ -216,6 +271,38 @@
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([js], { type: "text/javascript" }));
     a.download = "ml-prices.js";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  $("vis").addEventListener("change", (e) => { state.vis = e.target.value; render(true); });
+  $("toggleBrand").addEventListener("click", () => {
+    const b = state.brand;
+    if (!b) return;
+    if (hidden.marcas.has(b)) hidden.marcas.delete(b); else hidden.marcas.add(b);
+    saveHidden(); render(false);
+  });
+  $("hiddenBrands").addEventListener("click", (e) => {
+    const c = e.target.closest("[data-unhide-brand]");
+    if (!c) return;
+    hidden.marcas.delete(c.dataset.unhideBrand);
+    saveHidden(); render(false);
+  });
+  $("grid").addEventListener("click", (e) => {
+    const h = e.target.closest("[data-hide]");
+    if (!h) return;
+    const id = Number(h.dataset.hide);
+    if (hidden.perfumes.has(id)) hidden.perfumes.delete(id); else hidden.perfumes.add(id);
+    saveHidden(); render(state.vis !== "");
+  });
+  $("exportOcultos").addEventListener("click", () => {
+    const data = { perfumes: [...hidden.perfumes].sort((a, b) => a - b), marcas: [...hidden.marcas].sort() };
+    const js = "// Perfumes y marcas que NO se muestran en la tienda.\n" +
+      "// Se genera desde admin/index.html con el botón \"Exportar ocultos.js\" y se reemplaza este archivo.\n" +
+      "window.OCULTOS = " + JSON.stringify(data) + ";\n";
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([js], { type: "text/javascript" }));
+    a.download = "ocultos.js";
     a.click();
     URL.revokeObjectURL(a.href);
   });
