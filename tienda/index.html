@@ -76,7 +76,8 @@
   .modal .shade { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
   .sheet { position: relative; background: var(--bg); border-radius: 16px; width: min(860px, 100%); max-height: calc(100vh - 32px); overflow: auto; }
   .sheet .close { position: absolute; top: 8px; right: 12px; z-index: 1; }
-  .d-wrap { display: grid; grid-template-columns: 1fr 1fr; }
+  .d-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .d-img { min-width: 0; }
   .d-img { background: #fff; aspect-ratio: 1; }
   .d-img img { width: 100%; height: 100%; object-fit: contain; padding: 24px; display: block; }
   .d-info { padding: 28px 24px; display: flex; flex-direction: column; gap: 8px; }
@@ -91,7 +92,7 @@
   .d-info .actions { margin-top: auto; }
   .wa.wide { width: auto; padding: 0 14px; display: flex; gap: 6px; align-items: center; font-weight: 600; font-size: 13px; }
   @media (max-width: 640px) {
-    .d-wrap { grid-template-columns: 1fr; }
+    .d-wrap { grid-template-columns: minmax(0, 1fr); }
     .d-img { aspect-ratio: 4 / 3; }
     .d-info { padding: 18px 16px 20px; }
     .d-name { font-size: 24px; }
@@ -118,12 +119,40 @@
   .send { width: 100%; border: 0; border-radius: 10px; background: var(--wa); color: var(--wa-ink); padding: 13px; font-weight: 600; display: flex; justify-content: center; gap: 8px; align-items: center; }
   .send:disabled { opacity: .5; cursor: default; }
 
+  .tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin-bottom: 10px; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: none; border: 0; background: none; padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--muted); }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-current=true] { color: var(--ink); background: var(--accent-soft); }
+
+  .row { margin: 28px 0 8px; }
+  .row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .row-head h2, .sec-head h2 { font: 600 30px/1.1 "Cormorant Garamond", serif; margin: 0; }
+  .row-head p, .sec-head p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  .see-all { flex: none; border: 0; background: none; color: var(--accent); font-weight: 600; font-size: 14px; }
+  .strip { display: grid; grid-auto-flow: column; grid-auto-columns: 220px; gap: 14px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; }
+  .strip .card { scroll-snap-align: start; }
+  .sec-head { margin-top: 24px; }
+  .sec-head:empty { display: none; }
+  .all-title { font: 600 30px/1.1 "Cormorant Garamond", serif; margin: 36px 0 0; }
+
+  .d-desc { margin: 0; font-size: 14px; line-height: 1.55; }
+  .d-fam { font-size: 13px; color: var(--muted); }
+  .pyramid { display: grid; gap: 6px; margin: 4px 0; }
+  .pyramid div { display: grid; grid-template-columns: 74px 1fr; gap: 8px; font-size: 13px; }
+  .pyramid dt { color: var(--muted); }
+  .pyramid dd { margin: 0; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill { font-size: 12px; border-radius: 999px; padding: 3px 10px; background: var(--accent-soft); color: var(--ink); }
+
   .site-footer { text-align: center; color: var(--muted); font-size: 13px; padding: 28px 16px 44px; border-top: 1px solid var(--line); }
   .site-footer a { color: var(--accent); }
   @media (max-width: 520px) {
     .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .controls select { flex: 1 1 140px; }
     .name { font-size: 13px; } .price { font-size: 17px; }
+    .strip { grid-auto-columns: 46%; gap: 10px; }
+    .row-head h2, .sec-head h2, .all-title { font-size: 24px; }
     .add { font-size: 12px; padding: 8px 4px; }
   }
 </style>
@@ -141,6 +170,7 @@
 </section>
 
 <div class="controls">
+  <nav class="wrap tabs" id="tabs" aria-label="Secciones"></nav>
   <div class="wrap">
     <input type="search" id="q" placeholder="Buscá tu perfume o marca…" aria-label="Buscar">
     <select id="brand" aria-label="Marca"><option value="">Todas las marcas</option></select>
@@ -160,6 +190,8 @@
 </div>
 
 <main class="wrap">
+  <div id="rows"></div>
+  <div class="sec-head" id="secHead"></div>
   <div class="count" id="count"></div>
   <div class="grid" id="grid"></div>
   <button class="more" id="more">Ver más perfumes</button>
@@ -207,7 +239,16 @@ const WHATSAPP = "5493471607271";
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
   };
   const cart = store.get("importxCart", {});
-  const state = { q: "", brand: "", g: "", sort: "pos", shown: PAGE };
+  const state = { q: "", brand: "", g: "", sort: "pos", sec: "", shown: PAGE };
+  const SECTIONS = [
+    { key: "tendencias", title: "Tendencias", sub: "Los perfumes que más se venden hoy en Argentina" },
+    { key: "invierno", title: "Para invierno", sub: "Cálidos, especiados y envolventes" },
+    { key: "verano", title: "Para verano", sub: "Frescos, cítricos y acuáticos" },
+    { key: "dulces", title: "Dulces", sub: "Vainilla, caramelo y notas golosas" },
+    { key: "arabes", title: "Árabes", sub: "Lattafa, Armaf, Al Haramain, Afnan y más" },
+    { key: "nicho", title: "Nicho y lujo", sub: "Casas de alta perfumería" },
+  ];
+  const secByKey = Object.fromEntries(SECTIONS.map((s) => [s.key, s]));
 
   const $ = (id) => document.getElementById(id);
   const ars = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
@@ -228,6 +269,7 @@ const WHATSAPP = "5493471607271";
   function filtered() {
     const q = norm(state.q).split(/\s+/).filter(Boolean);
     const list = all.filter((p) =>
+      (!state.sec || (p.s || []).includes(state.sec)) &&
       (!state.brand || p.b === state.brand) &&
       (!state.g || p.g === state.g) &&
       q.every((w) => p._s.includes(w)));
@@ -251,12 +293,19 @@ const WHATSAPP = "5493471607271";
     const p = byId.get(id);
     const rows = [["Marca", p.b], ["Tipo", p.t], ["Tamaño", p.ml && `${p.ml} ml`], ["Para", genderLabel[p.g]]]
       .filter(([, v]) => v);
+    const notes = p.no ? [["Salida", p.no.salida], ["Corazón", p.no.corazon], ["Fondo", p.no.fondo]]
+      .filter(([, v]) => v && v.length) : [];
+    const pills = (p.s || []).map((k) => `<span class="pill">${secByKey[k].title}</span>`).join("");
     $("detailBody").innerHTML = `
       <div class="d-img">${p.img ? `<img src="${esc(p.img)}" alt="${esc(p.n)}">` : ""}</div>
       <div class="d-info">
         <div class="brand">${esc(p.b)}</div>
         <h2 class="d-name">${esc(p.n)}</h2>
         ${p.ars ? `<div class="price">${ars.format(p.ars)}</div>` : `<div class="price ask">Consultá el precio por WhatsApp</div>`}
+        ${pills ? `<div class="pills">${pills}</div>` : ""}
+        ${p.d ? `<p class="d-desc">${esc(p.d)}</p>` : ""}
+        ${notes.length ? `${p.fam ? `<div class="d-fam">Familia olfativa: ${esc(p.fam)}</div>` : ""}
+          <dl class="pyramid">${notes.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v.join(", "))}</dd></div>`).join("")}</dl>` : ""}
         <dl class="d-specs">${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
         <ul class="d-perks"><li>Producto original importado</li><li>Envíos a todo el país</li><li>Consultá stock y medios de pago por WhatsApp</li></ul>
         <div class="actions">
@@ -292,8 +341,31 @@ const WHATSAPP = "5493471607271";
   }
 
   let current = [];
+  function renderTabs() {
+    $("tabs").innerHTML = [{ key: "", title: "Inicio" }, ...SECTIONS]
+      .map((s) => `<button class="tab" data-sec="${s.key}" aria-current="${state.sec === s.key}">${s.title}</button>`).join("");
+  }
+
+  // Portada: una fila por sección, con los perfumes con precio primero.
+  function renderRows() {
+    const home = !state.sec && !state.q && !state.brand && !state.g;
+    $("rows").innerHTML = home ? SECTIONS.map((s) => {
+      const items = all.filter((p) => (p.s || []).includes(s.key))
+        .sort((a, b) => (a.ars == null) - (b.ars == null)).slice(0, 12);
+      if (!items.length) return "";
+      return `<section class="row">
+        <div class="row-head"><div><h2>${s.title}</h2><p>${s.sub}</p></div>
+          <button class="see-all" data-sec="${s.key}">Ver todos →</button></div>
+        <div class="strip">${items.map(card).join("")}</div>
+      </section>`;
+    }).join("") + `<h2 class="all-title">Todos los perfumes</h2>` : "";
+    const s = secByKey[state.sec];
+    $("secHead").innerHTML = s ? `<h2>${s.title}</h2><p>${s.sub}</p>` : "";
+  }
+
   function render(reset) {
     if (reset) { current = filtered(); state.shown = PAGE; }
+    renderRows();
     $("count").textContent = `${current.length.toLocaleString("es-AR")} perfumes`;
     $("grid").innerHTML = current.slice(0, state.shown).map(card).join("");
     $("more").hidden = state.shown >= current.length;
@@ -343,7 +415,19 @@ const WHATSAPP = "5493471607271";
     state.g = c.dataset.g; render(true);
   }));
   $("more").addEventListener("click", () => { state.shown += PAGE; render(false); });
-  $("grid").addEventListener("click", (e) => {
+  function setSection(key) {
+    state.sec = key;
+    renderTabs();
+    render(true);
+    window.scrollTo({ top: key ? document.querySelector(".controls").offsetTop : 0, behavior: "smooth" });
+  }
+  $("tabs").addEventListener("click", (e) => {
+    const t = e.target.closest("[data-sec]");
+    if (t) setSection(t.dataset.sec);
+  });
+  document.querySelector("main").addEventListener("click", (e) => {
+    const sec = e.target.closest("[data-sec]");
+    if (sec) return setSection(sec.dataset.sec);
     const b = e.target.closest("[data-add]");
     if (b) { const id = Number(b.dataset.add); setQty(id, (cart[id] || 0) + 1); }
     const o = e.target.closest("[data-open]");
@@ -365,6 +449,7 @@ const WHATSAPP = "5493471607271";
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") { drawer.classList.remove("open"); closeDetail(); } });
   $("send").addEventListener("click", () => window.open(waLink(orderText()), "_blank", "noopener"));
 
+  renderTabs();
   render(true);
   renderCart();
 })();
